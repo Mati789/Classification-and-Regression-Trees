@@ -19,7 +19,7 @@ The project uses the data file **`airports.csv`**.
 `SimpleCART` is our custom implementation of a **single Decision Tree**. The model learns a series of questions (splits) based on the data to classify airport types.
 
 ### B. The Splitting Criterion (What it Counts)
-The model calculates the best split using **Gini Impurity** (Niejednorodność Gini).
+The model calculates the best split using **Gini Impurity**.
 * **What it is:** Gini Impurity measures how **mixed** the classes (airport types) are within a given node.
 * **Goal:** The algorithm chooses the split that **maximally reduces** the Gini Impurity, aiming for the **purest** possible child nodes (Gini close to 0.0). 
 
