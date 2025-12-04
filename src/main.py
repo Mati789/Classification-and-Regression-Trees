@@ -4,6 +4,7 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import confusion_matrix, accuracy_score
 import numpy as np
+import random 
 from typing import Tuple
 
 # Global constants
@@ -40,11 +41,11 @@ def load_and_preprocess_data(file_path: str, limit: int) -> Tuple[pd.DataFrame, 
     # --- 2. Preprocessing: Label Encoding ---
     # Convert categorical text labels into numerical values
     le_target = LabelEncoder()
-    le_features = LabelEncoder()
-
-    # Encoding features (X)
+    
+    # Encoding features (X) and target (y)
     for col in features:
-        data[col] = le_features.fit_transform(data[col])
+        # Using a separate Label Encoder for each feature column for simplicity
+        data[col] = LabelEncoder().fit_transform(data[col]) 
         
     # Encoding target (y)
     data[target] = le_target.fit_transform(data[target])
@@ -78,7 +79,6 @@ def calculate_information_gain(X_data: pd.DataFrame, y_data: pd.Series, feature_
     for value in X_data[feature_col].unique():
         y_subset = y_data[X_data[feature_col] == value]
         weight = len(y_subset) / total_samples
-        # Sum the weighted entropies of the subsets
         weighted_entropy_children += weight * calculate_entropy(y_subset)
         
     # Information Gain = Parent_Entropy - Weighted_Child_Entropy
@@ -87,17 +87,21 @@ def calculate_information_gain(X_data: pd.DataFrame, y_data: pd.Series, feature_
 
 def main():
     """Main function to run the entire CART analysis process."""
+    # Generate a random seed for variability across multiple script executions.
+    random_seed = random.randint(0, 100000)
+    
     print(f"--- STARTING CART PROJECT (Entropy) ---")
+    print(f"Using random state seed: {random_seed}. Results will vary on each run.")
     
     # 1. Load and Preprocess Data
     try:
         X, y, features, le_target = load_and_preprocess_data(DATASET_FILE, ROWS_LIMIT)
     except Exception as e:
-        print(f"Script stopped due to data loading error: {e}")
+        print(f"Script terminated due to data loading error: {e}")
         return
 
     # Split into training and testing sets (30% test)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=random_seed)
     print(f"Successfully loaded and split data ({len(X_train)} training samples, {len(X_test)} test samples).")
     
     # --- 2. Entropy and Information Gain (IG) Demonstration ---
@@ -119,14 +123,13 @@ def main():
 
     # --- 3. Modeling and Comparison ---
 
-    # 1. SIMPLE CART MODEL: scikit-learn with Entropy criterion and limited depth
-    # This fulfills the requirement for simplicity and using the Entropy criterion.
-    simple_cart_model = DecisionTreeClassifier(criterion='entropy', max_depth=3, random_state=42)
+    # 1. SIMPLE CART MODEL: Entropy criterion, increased max_depth=10 for better Accuracy
+    simple_cart_model = DecisionTreeClassifier(criterion='entropy', max_depth=10, random_state=random_seed)
     simple_cart_model.fit(X_train, y_train)
     y_pred_simple = simple_cart_model.predict(X_test)
 
     # 2. SCIKIT-LEARN COMPARISON MODEL: Default Gini criterion, full depth
-    sklearn_model = DecisionTreeClassifier(criterion='gini', random_state=42)
+    sklearn_model = DecisionTreeClassifier(criterion='gini', random_state=random_seed)
     sklearn_model.fit(X_train, y_train)
     y_pred_sklearn = sklearn_model.predict(X_test)
 
@@ -141,9 +144,8 @@ def main():
     cm_sklearn = confusion_matrix(y_test, y_pred_sklearn)
     
     print("\n--- MODELING RESULTS AND EVALUATION ---")
-    print(f"Number of unique classes in target (Total_Stops): {len(y.unique())}")
 
-    print("\n1. SIMPLE CART MODEL (Entropy, max_depth=3)")
+    print("\n1. SIMPLE CART MODEL (Entropy, max_depth=10 - IMPROVED)")
     print(f"  - Accuracy: {accuracy_simple:.4f}")
     print("  - Confusion Matrix:")
     print(cm_simple)
