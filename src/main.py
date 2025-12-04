@@ -91,7 +91,7 @@ def main():
     random_seed = random.randint(0, 100000)
     
     print(f"--- STARTING CART PROJECT (Entropy) ---")
-    print(f"Using random state seed: {random_seed}. Results will vary on each run.")
+    print(f"Using random state seed: {random_seed}.")
     
     # 1. Load and Preprocess Data
     try:
@@ -100,8 +100,9 @@ def main():
         print(f"Script terminated due to data loading error: {e}")
         return
 
-    # Split into training and testing sets (30% test)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=random_seed)
+    # Split into training (90%) and testing (10%) sets. 4500 for training, 500 for test.
+    # test_size=0.1 ensures 10% (500 rows) is used for testing.
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1, random_state=random_seed)
     print(f"Successfully loaded and split data ({len(X_train)} training samples, {len(X_test)} test samples).")
     
     # --- 2. Entropy and Information Gain (IG) Demonstration ---
@@ -119,16 +120,18 @@ def main():
             best_ig = ig
             best_feature = feature
             
-    print(f"Conclusion: The best feature for the first split is '{best_feature}' (IG: {best_ig:.4f}).")
+    print(f"Conclusion: The best feature for the first split is '{best_feature}'.")
 
     # --- 3. Modeling and Comparison ---
 
-    # 1. SIMPLE CART MODEL: Entropy criterion, increased max_depth=10 for better Accuracy
-    simple_cart_model = DecisionTreeClassifier(criterion='entropy', max_depth=10, random_state=random_seed)
+    # 1. SIMPLE CART MODEL: Entropy criterion, drastically reduced max_depth=3 
+    # This restriction ensures the model is significantly less complex than the full tree.
+    simple_cart_model = DecisionTreeClassifier(criterion='entropy', max_depth=3, random_state=random_seed)
     simple_cart_model.fit(X_train, y_train)
     y_pred_simple = simple_cart_model.predict(X_test)
 
     # 2. SCIKIT-LEARN COMPARISON MODEL: Default Gini criterion, full depth
+    # This model is allowed to grow to its full complexity.
     sklearn_model = DecisionTreeClassifier(criterion='gini', random_state=random_seed)
     sklearn_model.fit(X_train, y_train)
     y_pred_sklearn = sklearn_model.predict(X_test)
@@ -145,12 +148,12 @@ def main():
     
     print("\n--- MODELING RESULTS AND EVALUATION ---")
 
-    print("\n1. SIMPLE CART MODEL (Entropy, max_depth=10 - IMPROVED)")
+    print("\n1. SIMPLE CART MODEL (Entropy, max_depth=3 )")
     print(f"  - Accuracy: {accuracy_simple:.4f}")
     print("  - Confusion Matrix:")
     print(cm_simple)
 
-    print("\n2. SCIKIT-LEARN COMPARISON MODEL (Gini, full depth)")
+    print("\n2. SCIKIT-LEARN COMPARISON MODEL")
     print(f"  - Accuracy: {accuracy_sklearn:.4f}")
     print("  - Confusion Matrix:")
     print(cm_sklearn)
