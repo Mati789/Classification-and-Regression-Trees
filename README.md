@@ -38,7 +38,7 @@ pip install -r requirements.txt
 ### C. Run the main file
 
 ```bash
-python src/airport_random_forest/main.py
+python src/main.py
 ```
 
 ### D. Run the tests
@@ -53,11 +53,6 @@ pytest
 # Run tests with verbose output
 pytest -v
 
-# Run tests with coverage report
-pytest --cov=src --cov-report=term-missing
-
-# Run specific test file
-pytest tests/test_basic.py
 ```
 
 ## Project Interview
