@@ -1,61 +1,65 @@
-# CART Algorithm Implementation
+# Project Technical Documentation
 
-## Project Overview
-This project focuses on the manual implementation of the **Classification and Regression Trees (CART)** algorithm in Python. The goal was to build a Decision Tree classifier from scratch using **Gini Impurity** as the splitting criterion and compare its performance against the industry-standard implementation from `scikit-learn`.
+## Overview: Goal and Methodology
 
----
+This project implements and analyzes the **Classification and Regression Tree (CART)** algorithm. The goal is to predict the number of flight stopovers (`Total_Stops`).
 
-## 1. About CART
-**CART (Classification and Regression Trees)** is a predictive modeling algorithm used in machine learning. It builds a decision tree by recursively splitting the dataset into subsets based on the value of input features.
+The core methodology:
+1.  **Demonstrate the mathematical foundation** using **Entropy** and **Information Gain**.
+2.  **Compare two models:** a simple, restricted model vs. a complex, high-accuracy model.
 
-* **How it works:** The algorithm searches for the best feature and threshold to split data to maximize "purity" in the resulting nodes.
-* **The Metric:** In this classification implementation, we use **Gini Impurity** to measure the likelihood of incorrect classification of a new instance.
-* **The Goal:** To create a tree where the leaves (end nodes) contain data points that are as homogeneous as possible regarding the target variable.
+The analysis uses flight data from **'dataset.csv'** with **Pandas** and **Scikit-learn**.
 
 ---
+## 1. Key Parameters and Data Setup
 
-## 2. Project Requirements Met
-This repository adheres to the following academic and technical guidelines:
-* **PyScaffold Structure:** Organized directory layout for Python projects.
-* **Custom Algorithm Implementation:** The CART logic is written from scratch (no `sklearn` used for the core logic).
-* **Library Comparison:** The custom model is benchmarked against `sklearn.tree.DecisionTreeClassifier`.
-* **PEP 8 Compliance:** Clean, readable, and standard Python code style.
-* **Documentation:** Comprehensive documentation of the logic and usage (this file).
-
----
-
-## 3. ⚙️ Core Components & Architecture
-The custom solution is encapsulated in the `SimpleCART` class. Here are the key functions driving the logic:
-
-* `fit(X, y)`: The entry point for training. It accepts features and labels and initiates the recursive tree-building process.
-* `_build_tree(X, y, depth)`: A recursive function that constructs the nodes. It stops when the max depth is reached or the node is pure.
-* `_best_split(X, y)`: The "brain" of the algorithm. It iterates through features to find the optimal threshold that minimizes Gini Impurity. *Includes an optimization to sample thresholds for continuous variables to improve speed.*
-* `gini_impurity(y)`: A mathematical helper function that calculates the impurity of a specific node.
-* `predict(X)`: Traverses the built tree to output class labels for new, unseen data.
+| Parameter | Value | Description |
+| :--- | :--- | :--- |
+| **Data Utilized** | First 5000 Rows | Fixed, consistent dataset size. |
+| **Data Split** | 90% Training / 10% Testing | High training ratio (4500 rows) for effective pattern learning. |
+| **Features (X)** | `Airline`, `Source`, `Destination` | Three categorical input columns. |
+| **Target (Y)** | `Total_Stops` | The predicted categorical variable. |
+| **Model 1: max_depth** | 3 (Restricted) | **Guarantees** the model is simple and ensures lower accuracy than the full tree. |
+| **Splitting Criterion** | Entropy / Information Gain | Metric used to select the best feature for node splitting. |
+| **Pre-processing** | Label Encoding | Converts all categorical data into integer values. |
 
 ---
+## 2. Analysis of Model Results
 
-## 4. Data Processing Pipeline
-To test the algorithm, we utilize real-world data regarding global airports (`airports.csv`).
+### 2.1. Interpretation of Entropy and Information Gain (IG)
 
-* **Dataset Size:** To ensure efficient training during development, the dataset is downsampled to **3,000 samples**.
-* **Target Variable:** We classify airports into three types: `small_airport`, `medium_airport`, and `large_airport`.
-* **Feature Engineering:**
-    * **Geography:** Latitude, Longitude, and Elevation.
-    * **Categorical Handling:** `Continent` and `ISO Country` are processed using One-Hot Encoding (Top 10 countries kept, others grouped).
-* **Split Strategy:** The data is split into **Training (80%)** and **Testing (20%)** sets. Crucially, we use a **stratified split** to ensure the proportion of airport types remains consistent across both sets.
+* **Training Set Entropy (e.g., 1.4462):** Measures the initial **impurity** (randomness) of the target classes. A value closer to 2.0 (max for 4 classes) indicates high uncertainty.
+* **Information Gain (IG):** Measures the **reduction in uncertainty** achieved by a split. The feature with the highest IG is selected as the best splitter. 
+    * **Conclusion:** The feature with the highest IG (e.g., **`Destination`**) is confirmed as the most critical factor for prediction.
+
+### 2.2. Model Performance Comparison
+
+| Metric | Simple CART (Entropy, Max Depth 3) | Scikit-learn Comparison (Gini, Full Depth) |
+| :--- | :--- | :--- |
+| **Typical Accuracy** | Significantly lower (e.g., 0.75 - 0.80) | Significantly higher (e.g., 0.85 - 0.90) |
+| **Goal** | Show the effect of **model constraint** and simplicity. | Show the maximum performance achievable with current features. |
+
+### 2.3. Confusion Matrix (CM) Analysis
+
+The CM is **4x4** because the target variable (`Total_Stops`) has four unique classes.
+
+* **Simple Model CM:** Shows high error rates off the main diagonal. **Shallow depth** prevents learning complex rules for minority classes (e.g., `3 stops`).
+* **Comparison Model CM:** Shows much higher correct prediction rates on the main diagonal. **Greater complexity** allows for superior classification across all classes.
 
 ---
+## 3. Key Python Functions Breakdown
 
-## 5. Results & Comparative Analysis
-The project concludes with a direct comparison between the `SimpleCART` (Custom) and `Scikit-Learn` models.
+### 3.1. `load_and_preprocess_data()`
 
-### Performance Metrics
-We evaluate the models based on:
-1.  **Accuracy Score:** The percentage of correctly predicted airport types.
-2.  **Confusion Matrix:** A detailed breakdown showing where the models got confused (e.g., misclassifying a medium airport as a small one).
+* **Purpose:** Loads data, cleans missing values, and prepares data for modeling.
+* **Key Action:** Executes **Label Encoding** on all features and the target.
 
-### Observations
-* **Accuracy:** The custom implementation achieves results highly comparable to the Scikit-Learn library.
-* **Optimization:** The `SimpleCART` uses a stochastic threshold approach (sampling 20 thresholds for dense features). While Scikit-Learn is more exhaustive, the custom model provides a great balance between **computational speed** and **predictive accuracy**.
-* **Constraints:** Both models are limited to a `max_depth=7` to prevent overfitting and ensure a fair comparison.
+### 3.2. `calculate_entropy(y_data)`
+
+* **Purpose:** Computes the mathematical uncertainty of any given data subset.
+* **Mechanism:** Applies the formula $H(X) = -\sum P(x_i) \log_2(P(x_i))$.
+
+### 3.3. `calculate_information_gain(X_data, y_data, feature_col)`
+
+* **Purpose:** Determines which feature provides the best split.
+* **Mechanism:** Calculates the reduction in entropy. The highest IG wins.
